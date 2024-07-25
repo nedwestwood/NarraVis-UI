@@ -9,7 +9,7 @@ You can contribute in many ways:
 
 ## Report Bugs
 
-Report bugs at https://github.com/Andrewtham/studious-octo-funicular-ui/issues
+Report bugs at https://github.com/AndrewTham/studious-octo-funicular-ui/issues
 
 If you are reporting a bug, please include:
 
@@ -30,17 +30,6 @@ Anything tagged with "enhancement" and "help wanted" is open to whoever wants to
 ## Write Documentation
 
 Cookiecutter PyPackage could always use more documentation, whether as part of the official docs, in docstrings, or even on the web in blog posts, articles, and such.
-
-## Submit Feedback
-
-The best way to send feedback is to file an issue at https://github.com/Andrewtham/studious-octo-funicular-ui/issues.
-
-If you are proposing a new feature:
-
-- Explain in detail how it would work.
-- Keep the scope as narrow as possible, to make it easier to implement.
-- Remember that this is a volunteer-driven project, and that contributions
-  are welcome :)
 
 # Get Started!
 
