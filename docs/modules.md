@@ -1,1 +1,1 @@
-::: studious_octo_funicular_ui.foo
+::: studious_octo_funicular_ui.narrative_visualiser

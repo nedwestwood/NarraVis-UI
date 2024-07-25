@@ -1,5 +1,14 @@
 # studious-octo-funicular-ui
 
+## Tech Stack
+
+### Cytoscape
+
+[Cytoscape](https://github.com/vivien000/st-cytoscape)
+[Cytoscape styling](https://raw.githubusercontent.com/cytoscape/cytoscape.js/eb80f7acdf5eb4845fc17377188e990ad08162fa/documentation/md/style.md)
+
+## Misc
+
 [![Release](https://img.shields.io/github/v/release/Andrewtham/studious-octo-funicular-ui)](https://img.shields.io/github/v/release/Andrewtham/studious-octo-funicular-ui)
 [![Build status](https://img.shields.io/github/actions/workflow/status/Andrewtham/studious-octo-funicular-ui/main.yml?branch=main)](https://github.com/Andrewtham/studious-octo-funicular-ui/actions/workflows/main.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/Andrewtham/studious-octo-funicular-ui/branch/main/graph/badge.svg)](https://codecov.io/gh/Andrewtham/studious-octo-funicular-ui)
@@ -37,8 +46,6 @@ For activating the automatic documentation with MkDocs, see [here](https://fpgma
 To enable the code coverage reports, see [here](https://fpgmaas.github.io/cookiecutter-poetry/features/codecov/).
 
 ## Releasing a new version
-
-
 
 ---
 
