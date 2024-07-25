@@ -1,6 +1,5 @@
 from itertools import chain
 
-import networkx as nx
 import streamlit as st
 from st_cytoscape import cytoscape
 
@@ -82,17 +81,13 @@ def build_graph(entity_node_label, events_node_labels, lens, height, graph):
     subgraph_nodes = subgraph.nodes(data=True)
     subgraph_edges = subgraph.edges(data=True)
 
-    if nx.is_empty(subgraph):
-        st.error("Graph is empty!")
-        return [], []
-    else:
-        with st.container(height=height):
-            selected = cytoscape(
-                elements=get_element(subgraph_nodes, subgraph_edges),
-                stylesheet=get_stylesheet(),
-                layout=get_layout(),
-                width="100%",
-                height=f"{height - 35}px",
-                key="graph",
-            )
+    with st.container(height=height):
+        selected = cytoscape(
+            elements=get_element(subgraph_nodes, subgraph_edges),
+            stylesheet=get_stylesheet(),
+            layout=get_layout(),
+            width="100%",
+            height=f"{height - 35}px",
+            key="graph",
+        )
     return selected["nodes"], subgraph_nodes

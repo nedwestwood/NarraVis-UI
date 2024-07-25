@@ -1,4 +1,4 @@
-from studious_octo_funicular_ui.constant import PALETTE
+from studious_octo_funicular_ui.constants import PALETTE
 
 edge_weight_scale = lambda edge_weight: edge_weight * 5  # Larger numbers -> Bigger nodes
 

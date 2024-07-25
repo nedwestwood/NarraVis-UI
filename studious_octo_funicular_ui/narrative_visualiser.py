@@ -1,8 +1,8 @@
 import streamlit as st
 
 from studious_octo_funicular_ui.graph import build_graph
-from studious_octo_funicular_ui.sample_graph_data import G
 from studious_octo_funicular_ui.sidebar import build_sidebar
+from studious_octo_funicular_ui.tabs.details import build_graph_details_tabs
 
 HEIGHT = 600
 
@@ -13,20 +13,20 @@ st.set_page_config(
     # initial_sidebar_state="expanded",
 )
 
-st.title("Narrative 2000")
 
-## Input Data
-graph = G  # TODO: Replace with input graph file next time
+def main():
+    ## Select Data
+    sidebar = build_sidebar()
+    if sidebar is None:
+        return st.error("Graph is empty!")
 
-entity_node_label, events_node_labels, lens = build_sidebar(graph.nodes(data=True))
-selected_nodes, subgraph_nodes = build_graph(entity_node_label, events_node_labels, lens, HEIGHT, graph)
+    graph, entity_node_label, events_node_labels, lens = sidebar
+    selected_nodes, subgraph_nodes = build_graph(entity_node_label, events_node_labels, lens, HEIGHT, graph)
 
-## Graph Details
-if selected_nodes:
-    with st.container():
-        st.write(
-            "**Selected nodes**:",
-            {node: subgraph_nodes[node] for node in selected_nodes},
-        )
+    # TODO: All associated videos
+    # TODO: Add graph metrics
+    build_graph_details_tabs(selected_nodes, subgraph_nodes)
 
-# TODO: All associated videos
+
+if __name__ == "__main__":
+    main()

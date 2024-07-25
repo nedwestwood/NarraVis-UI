@@ -14,8 +14,8 @@ packages = [
 python = ">=3.10,<4.0"
 networkx = "^3.3"
 streamlit = "^1.36.0"
-streamlit-cytoscapejs = "^0.0.2"
 st-cytoscape = "^0.0.5"
+streamlit-carousel = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"

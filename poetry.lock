@@ -1748,18 +1748,21 @@ watchdog = {version = ">=2.1.5,<5", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python (>=0.9.0)"]
 
 [[package]]
-name = "streamlit-cytoscapejs"
-version = "0.0.2"
-description = "A Streamlit custom component for Cytoscape.js"
+name = "streamlit-carousel"
+version = "1.1.0"
+description = "A Streamlit implementation of the React Bootstrap Carousel component."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "streamlit-cytoscapejs-0.0.2.tar.gz", hash = "sha256:353872ecaeced2ca208b2d2dc170bbcfd2cd4015d4b802a960b25a577d15b169"},
-    {file = "streamlit_cytoscapejs-0.0.2-py3-none-any.whl", hash = "sha256:bd073c3646fd735e210aa8803361a71f4c12c7355648c061902389b64f7f72ab"},
+    {file = "streamlit_carousel-1.1.0-py3-none-any.whl", hash = "sha256:e6152b9c2c0b9ac700864dd8683deb29339542962d29a05692366a37aac540de"},
+    {file = "streamlit_carousel-1.1.0.tar.gz", hash = "sha256:b255574e6976cce6000e32ed20e27ebc3677cf7188132f6d4bacace6731a147b"},
 ]
 
 [package.dependencies]
 streamlit = ">=0.63"
+
+[package.extras]
+dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [[package]]
 name = "tenacity"
@@ -1962,4 +1965,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "be5e1b7935c2e4654b422a54884ae3c7d0a78d34e9ceab2926e584b842323ea5"
+content-hash = "946f1e33e66ff7b4eb4087c3cd92a852623c16cd7dd6ec73c4aceec83a50bd05"
