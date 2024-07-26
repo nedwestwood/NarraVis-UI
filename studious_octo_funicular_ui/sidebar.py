@@ -29,6 +29,7 @@ def build_sidebar():
     try:
         with open(graph_data_file) as f:
             graph = nx.cytoscape_graph(json.load(f))
+
             if only_frames:
                 graph = graph.subgraph(
                     nodes=[
@@ -46,23 +47,33 @@ def build_sidebar():
         return
     st.sidebar.divider()
 
-    ## Filters
+    nodes = graph.nodes(data=True)
     if nx.is_empty(graph):
         return
 
-    nodes = graph.nodes(data=True)
+    ## Filters
+    ### Clusters
+    with st.sidebar.container():
+        clusters = st.sidebar.multiselect(
+            "Cluster(s)",
+            sorted({details["cluster"] for _, details in nodes}),
+        )
+    ###
+
+    filtered_nodes = [node for node in nodes if node[1]["cluster"] in clusters] if clusters else nodes
+
     ### Entities
     # TODO: Add node type in graph on the other repo
     with st.sidebar.container():
         entity_node_labels = st.sidebar.multiselect(
-            "Entities of Interest",
-            sorted((node for node, details in nodes if "character" in details)),
+            "Entities",
+            sorted((node for node, details in filtered_nodes if "character" in details)),
         )
 
         ### Events
         events_node_labels = st.sidebar.multiselect(
-            "Events of Interest",
-            sorted((node for node, details in nodes if "event_type" in details)),
+            "Events",
+            sorted((node for node, details in filtered_nodes if "event_type" in details)),
         )
     st.sidebar.divider()
 
@@ -89,7 +100,12 @@ def build_sidebar():
             ],
         )
 
-    return graph, entity_node_labels, events_node_labels, lens
+    return (
+        (graph.subgraph(nodes=(node_label for node_label, _ in filtered_nodes)) if clusters else graph),
+        entity_node_labels,
+        events_node_labels,
+        lens,
+    )
 
 
 def filter_graph_lens(lens, graph):
@@ -108,7 +124,7 @@ def filter_graph_nodes(entity_node_labels, event_node_labels, graph):
     try:
         all_nodes = (
             neighbor for node in chain(entity_node_labels, event_node_labels) for neighbor in graph.neighbors(node)
-        )
+        )  # TODO: Maybe on top of neighbours, can go by associated videos as well, so can see entities and events that appeared in the same video as well
     except nx.NetworkXError:
         return nx.Graph()  # node (represented by label) not in graph
 

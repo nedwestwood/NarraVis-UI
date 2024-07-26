@@ -12,6 +12,7 @@ def parse_nodes_for_cytograph(nodes):
                 "weight": edge_weight_scale(details["weight"]),
                 "node_type": "entity" if "character" in details else "event",
                 "color": (PALETTE["entity"] if "character" in details else PALETTE["event"]),
+                "cluster": details["cluster"],
                 "group": "nodes",
             },
             "selectable": True,
@@ -27,8 +28,8 @@ def parse_edges_for_cytograph(edges):
                 "id": f"{entity}➞{event}",
                 "name": details["relation_type"],
                 "weight": details["weight"],
-                "source": entity,
-                "target": event,
+                "source": event if details["relation_type"] == "affected by" else entity,
+                "target": entity if details["relation_type"] == "affected by" else event,
                 "color": (
                     PALETTE["event"] if details["relation_type"] == "affected by" else PALETTE["entity"]
                 ),  # "grey",

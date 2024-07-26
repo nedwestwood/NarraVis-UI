@@ -23,9 +23,10 @@ def main():
     graph, entity_node_label, events_node_labels, lens = sidebar
     selected_nodes, subgraph_nodes = build_graph(entity_node_label, events_node_labels, lens, HEIGHT, graph)
 
-    # TODO: All associated videos
+    # TODO: All associated images
     # TODO: Add graph metrics
-    build_graph_details_tabs(selected_nodes, subgraph_nodes)
+    if subgraph_nodes:
+        build_graph_details_tabs(selected_nodes, subgraph_nodes)
 
 
 if __name__ == "__main__":
