@@ -1,41 +1,121 @@
-# studious-octo-funicular-ui
+# Narrative Analysis User Interface
 
-UI for Narrative Analysis
+_Last modified: 1 August 2024_
 
-## Tech Stack
+## Introduction
 
-### Cytoscape
+This repository provides a user interface for the multimodal narrative analysis [pipeline](https://github.com/AndrewTham/studious-octo-funicular).
 
-[Cytoscape](https://github.com/vivien000/st-cytoscape)
-[Cytoscape styling](https://raw.githubusercontent.com/cytoscape/cytoscape.js/eb80f7acdf5eb4845fc17377188e990ad08162fa/documentation/md/style.md)
+Please note that this repository is still a work in progress.
 
-## Getting started with your project
+### Project Structure
 
-First, create a repository on GitHub with the same name as this project, and then run the following commands:
-
-```bash
-git init -b main
-git add .
-git commit -m "init commit"
-git remote add origin git@github.com:Andrewtham/studious-octo-funicular-ui.git
-git push -u origin main
+```
+studious-octo-funicular-ui/
+├── studious-octo-funicular-ui/
+│   └── tabs/
+│       ├── constants.py               # Specifies constants for the project
+│       ├── graph.py
+│       ├── narrative_visualiser.py    # Entry point for the repository
+│       ├── parser.py
+│       └── sidebar.py
+├── docs/                              # Miscellaneous documents
+├── data/                              # Input data
+│   ├── graphs/                        # Contains graphs generated from the pipeline
+│   ├── images/                        # Contains images associated with the graphs
+│   └── videos/                        # Contains videos associated with the graphs
+├── pyproject.toml                     # Manage packages used for this project
+└── README.md                          # Project documentation
 ```
 
-Finally, install the environment and the pre-commit hooks with
+## Software Requirements
+
+To develop on this repository, you need the following tools installed on your system:
+
+- [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- [Poetry](https://python-poetry.org/docs/)
+- [Python 3.10 or newer](https://www.python.org/downloads/)
+
+## Usage
+
+### 1. Set Up the Data Directory
+
+Create a `data/` directory with subdirectories `graphs`, `images`, and `videos`. Place all relevant data in the appropriate subdirectory.
+
+### 2. Start the Interface
+
+Run the following command in your terminal to start the interface:
+
+```bash
+streamlit run studious_octo_funicular_ui/narrative_visualiser.py
+```
+
+A browser window should open with the interface. If it does not, navigate to `http://localhost:8501` in your browser.
+
+## Development
+
+### Preparation
+
+#### 1. Install the Environment and Pre-commit Hooks
+
+Run this command in a terminal to set up the development environment and pre-commit hooks:
 
 ```bash
 make install
 ```
 
-You are now ready to start development on your project!
-The CI/CD pipeline will be triggered when you open a pull request, merge to main, or when you create a new release.
+#### 2. Activate the Environment
 
-To finalize the set-up for publishing to PyPi or Artifactory, see [here](https://fpgmaas.github.io/cookiecutter-poetry/features/publishing/#set-up-for-pypi).
-For activating the automatic documentation with MkDocs, see [here](https://fpgmaas.github.io/cookiecutter-poetry/features/mkdocs/#enabling-the-documentation-on-github).
-To enable the code coverage reports, see [here](https://fpgmaas.github.io/cookiecutter-poetry/features/codecov/).
+Activate the virtual environment with all necessary packages by running:
 
-## Releasing a new version
+```bash
+source .venv/bin/activate
+```
+
+Add or remove packages using `poetry add <PYTHON PACKAGE>` and `poetry remove <PYTHON PACKAGE>`, respectively.
+
+#### 3. Run Pre-commit Checks
+
+Run the pre-commit checks with the following command:
+
+```bash
+pre-commit run --all-files
+```
+
+#### 4. Commit Code Changes
+
+Stage your code changes with:
+
+```bash
+git add .
+```
+
+- **A. With Pre-commit Hooks**
+  To run the pre-commit hooks, use:
+
+  ```bash
+  git commit -m "<COMMIT MESSAGE>"
+  git push
+  ```
+
+- **B. Skip Pre-commit Hooks**
+  To skip the pre-commit hooks, use:
+
+  ```bash
+  git commit --no-verify
+  git push --no-verify
+  ```
+
+## Installation
+
+TODO
+
+## Publishing
+
+- To finalize the setup for publishing to PyPi or Artifactory, see [this guide](https://fpgmaas.github.io/cookiecutter-poetry/features/publishing/#set-up-for-pypi).
+- For activating automatic documentation with MkDocs, see [this guide](https://fpgmaas.github.io/cookiecutter-poetry/features/mkdocs/#enabling-the-documentation-on-github).
+- To enable code coverage reports, see [this guide](https://fpgmaas.github.io/cookiecutter-poetry/features/codecov/).
 
 ---
 
-Repository initiated with [fpgmaas/cookiecutter-poetry](https://github.com/fpgmaas/cookiecutter-poetry).
+This repository was initiated with [fpgmaas/cookiecutter-poetry](https://github.com/fpgmaas/cookiecutter-poetry).
