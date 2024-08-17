@@ -11,7 +11,7 @@ from studious_octo_funicular_ui.constants import GRAPH_DATA_DIR
 # Sidebar
 def build_sidebar():
     # TODO: Add an apply button?
-    st.sidebar.title("What's Up :beer:")
+    st.sidebar.title("Narrative")
     only_frames = st.sidebar.toggle("Only Frames", value=True)
     st.sidebar.divider()
 

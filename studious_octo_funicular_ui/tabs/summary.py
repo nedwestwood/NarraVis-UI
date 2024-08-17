@@ -25,8 +25,10 @@ def build_summary(selected_nodes, subgraph_nodes):
             elif "character" in node:
                 entities.append(node)
 
-        st.text("Entities")
-        st.dataframe(pd.DataFrame.from_records(entities).drop(["id", "value", "name"], axis=1))
+        if entities:
+            st.text("Entities")
+            st.dataframe(pd.DataFrame.from_records(entities).drop(["id", "value", "name"], axis=1))
 
-        st.text("Events")
-        st.dataframe(pd.DataFrame.from_records(events).drop(["id", "value", "name"], axis=1))
+        if events:
+            st.text("Events")
+            st.dataframe(pd.DataFrame.from_records(events).drop(["id", "value", "name"], axis=1))
