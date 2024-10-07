@@ -6,15 +6,16 @@ from studious_octo_funicular_ui.tabs.summary import build_summary
 
 def build_graph_details_tabs(selected_nodes, subgraph_nodes):
     tab1, tab2, tab3 = st.tabs(["Summary/Details", "Images", "Videos"])
+    associated_videos = get_associated_videos(selected_nodes, subgraph_nodes)
 
     with tab1:
         build_summary(selected_nodes, subgraph_nodes)
 
     with tab2:
-        build_media_gallery("image")
+        build_media_gallery("image", associated_videos)
 
     with tab3:
-        build_media_gallery("video", get_associated_videos(selected_nodes, subgraph_nodes))
+        build_media_gallery("video", associated_videos)
 
     # TODO: Filter images and videos
 
