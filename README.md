@@ -40,7 +40,31 @@ To develop on this repository, you need the following tools installed on your sy
 
 ### 1. Set Up the Data Directory
 
-Create a `data/` directory with subdirectories `graphs`, `images`, and `videos`. Place all relevant data in the appropriate subdirectory.
+Create a `data/` directory with subdirectories `output` and `videos`.
+
+- `data/output/`: Contains output folder obtained from a pipeline run.
+- `data/videos/`: Contains folders of videos used to initiate a pipeline run
+
+E.g.
+
+```
+data/
+├── output/
+  ├── <Datetime for pipeline run>/              # Feel free to rename this, but make sure directory containing the corresponding videos (in `data/videos/`) is similarly named
+    ├── scenes/                                 # Directory of images obtained from scene detection. Also contains `detected_objects.csv` with object detection information.
+    ├── intermediate_graph_data<N>.csv          # Series of checkpoint files with similar name except a number N denoting the checkpoint step order number.
+    ├── final_graph_data.csv/                   # Main data (result) obtained from the pipeline.`detected_objects.csv` with object detection information.
+    ├── final_graph_data.json                   # Main data from the pipeline, formatted for use in the UI.
+    ├── pipeline.log                            # Log file for debugging/error handling.
+    ├── ...
+    └── topics.csv                              # Output from video topic classification
+  ├── ...
+  └── ...
+└── videos/
+  ├── <Datetime for pipeline run>/              # Videos used for a pipeline run. Should have the corresponding pipeline results in `data/output/`
+  ├── ...
+  └── ...
+```
 
 ### 2. Start the Interface
 
@@ -68,8 +92,16 @@ make install
 
 Activate the virtual environment with all necessary packages by running:
 
+##### MacOS
+
 ```bash
 source .venv/bin/activate
+```
+
+##### Windows
+
+```bash
+.venv\Scripts\activate
 ```
 
 Add or remove packages using `poetry add <PYTHON PACKAGE>` and `poetry remove <PYTHON PACKAGE>`, respectively.

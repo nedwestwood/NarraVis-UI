@@ -64,16 +64,16 @@ def get_layout():
     return {
         "name": "fcose",
         "quality": "proof",
-        "animate": True,
-        "animationDuration": 500,
+        "animate": False,
+        "animationDuration": 0,
         "fit": True,
         "padding": 5,
-        "nodeRepulsion": 10,
+        "nodeRepulsion": 100,
         "gravity": 1,
         "avoidOverlap": True,
         "nodeDimensionsIncludeLabels": True,
         "uniformNodeDimensions": True,
-        "numIter": 25000,
+        "numIter": 100,
     }
 
 

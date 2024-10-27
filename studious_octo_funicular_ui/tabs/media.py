@@ -3,7 +3,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from studious_octo_funicular_ui.constants import IMAGE_DATA_DIR, VIDEO_DATA_DIR
+from studious_octo_funicular_ui.constants import VIDEO_DATA_DIR
 
 
 def build_media_gallery(media_type, media_ids=None):
@@ -11,25 +11,23 @@ def build_media_gallery(media_type, media_ids=None):
         return
 
     if media_type == "image":
+        image_path = st.session_state.case / "scenes"
         if media_ids:
             build_gallery(
                 "image",
-                [
-                    img_path
-                    for media_id in media_ids
-                    for img_path in Path(IMAGE_DATA_DIR).glob(f"{media_id.strip('.mp4')}/*.jpg")
-                ],
+                [img_path for media_id in media_ids for img_path in image_path.glob(f"{media_id.strip('.mp4')}/*.jpg")],
             )
         else:
-            build_gallery("image", list(Path(IMAGE_DATA_DIR).glob("*/*.jpg")))
+            build_gallery("image", list(image_path.glob("*/*.jpg")))
     elif media_type == "video":
+        video_path = Path(VIDEO_DATA_DIR) / st.session_state.case.name
         if media_ids:
             build_gallery(
                 "video",
-                [(Path(VIDEO_DATA_DIR) / media_id).with_suffix(".mp4") for media_id in media_ids],
+                [(video_path / media_id).with_suffix(".mp4") for media_id in media_ids],
             )
         else:
-            build_gallery("video", list(Path(VIDEO_DATA_DIR).glob("*.mp4")))
+            build_gallery("video", list(video_path.glob("*.mp4")))
 
 
 def build_gallery(media_type, media):
@@ -65,7 +63,7 @@ def build_video(video_path):
         st.video(video_bytes)
         st.markdown(f"**Video**: {video_path.stem}")
     except FileNotFoundError:
-        st.write("Missing video file(s).")
+        st.write(f"**Missing video**: {video_path.stem}")
 
 
 def build_image(image_path):

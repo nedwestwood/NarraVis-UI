@@ -9,6 +9,5 @@ PALETTE = {
     "event": "#CBC3E3",
 }
 DATA_DIR = Path("./data/")
-GRAPH_DATA_DIR = DATA_DIR / "graphs/"
+OUTPUT_DATA_DIR = DATA_DIR / "output/"
 VIDEO_DATA_DIR = DATA_DIR / "videos/"
-IMAGE_DATA_DIR = DATA_DIR / "images/"

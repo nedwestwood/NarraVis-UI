@@ -5,7 +5,7 @@ from pathlib import Path
 import networkx as nx
 import streamlit as st
 
-from studious_octo_funicular_ui.constants import GRAPH_DATA_DIR
+from studious_octo_funicular_ui.constants import OUTPUT_DATA_DIR
 
 
 # Sidebar
@@ -16,13 +16,15 @@ def build_sidebar():
     st.sidebar.divider()
 
     ## Data
-    options = Path(GRAPH_DATA_DIR).glob("*.json")
+    options = Path(OUTPUT_DATA_DIR).glob("*/*.json")
     with st.sidebar.container():
         graph_data_file = st.sidebar.selectbox(
             "Graph Data",
             options=sorted(options, key=lambda file: Path(file).lstat().st_mtime, reverse=True),
-            format_func=lambda file: file.stem,
+            format_func=lambda file: file.parent.name,
         )
+    st.session_state.case = graph_data_file.parent
+
     if not graph_data_file:
         return nx.Graph(), [], [], "All"
 
