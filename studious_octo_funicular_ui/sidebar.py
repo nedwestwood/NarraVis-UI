@@ -1,11 +1,62 @@
 import json
+from datetime import datetime
 from itertools import chain
 from pathlib import Path
 
 import networkx as nx
 import streamlit as st
 
-from studious_octo_funicular_ui.constants import OUTPUT_DATA_DIR
+from studious_octo_funicular_ui.constants import OUTPUT_DATA_DIR, VIDEO_DATA_DIR
+
+
+def get_cluster_relevant_videos(nodes, clusters):
+    if not clusters:
+        return nodes
+    return [node for node in nodes if node[1]["cluster"] in clusters]
+
+
+def get_date_relevant_videos(edges, shortlist_videos):
+    if not shortlist_videos:
+        return edges
+
+    return [edge for edge in edges if set(edge[2]["relation_explanation"].keys()) & set(shortlist_videos)]
+
+
+def get_subgraph_with_cluster_adjustment(graph, clusters, filtered_nodes):
+    if not clusters:
+        return graph
+    return graph.subgraph(nodes=(node_label for node_label, _ in filtered_nodes)).copy()
+
+
+def get_subgraph_with_time_adjustment(graph, shortlist_videos, filtered_edges):
+    if not shortlist_videos:
+        return graph
+
+    sub_graph = graph.edge_subgraph(edges=((src, dest) for src, dest, _ in filtered_edges)).copy()
+    # Remove isolates
+    sub_graph.remove_nodes_from(list(nx.isolates(sub_graph)))
+
+    for node in sub_graph.nodes:
+        if "character_description" in sub_graph.nodes[node]:
+            sub_graph.nodes[node]["character_description"] = {
+                vid_id: exp
+                for vid_id, exp in sub_graph.nodes[node]["character_description"].items()
+                if vid_id in shortlist_videos
+            }
+            sub_graph.nodes[node]["weight"] = len(sub_graph.nodes[node]["character_description"])
+            continue
+
+        sub_graph.nodes[node]["weight"] = sub_graph.degree(node)
+
+    for edge in sub_graph.edges:
+        sub_graph.edges[edge]["relation_explanation"] = {
+            vid_id: exp
+            for vid_id, exp in sub_graph.edges[edge]["relation_explanation"].items()
+            if vid_id in shortlist_videos
+        }
+        sub_graph.edges[edge]["weight"] = len(sub_graph.edges[edge]["relation_explanation"])
+
+    return sub_graph
 
 
 # Sidebar
@@ -54,6 +105,26 @@ def build_sidebar():
         return
 
     ## Filters
+    ### Date
+    with open(VIDEO_DATA_DIR / st.session_state.case.name / "metadata.json") as f:
+        metadata = [{"id": video["id"], "date": datetime.fromtimestamp(video["createTime"])} for video in json.load(f)]
+
+    if len(metadata) > 1:
+        metadata.sort(key=lambda x: x["date"], reverse=False)
+        min_date = metadata[0]["date"]
+        max_date = metadata[-1]["date"]
+
+        with st.sidebar.container():
+            date = st.sidebar.slider(
+                label="Post Date",
+                min_value=min_date,
+                max_value=max_date,
+                value=max_date,
+            )
+            shortlist_videos = [video["id"] for video in metadata if video["date"] <= date]
+    else:
+        shortlist_videos = []
+
     ### Clusters
     with st.sidebar.container():
         clusters = st.sidebar.multiselect(
@@ -62,35 +133,32 @@ def build_sidebar():
         )
     ###
 
-    filtered_nodes = [node for node in nodes if node[1]["cluster"] in clusters] if clusters else nodes
+    # filtered_nodes = get_date_relevant_videos(
+    #     get_cluster_relevant_videos(nodes, clusters), shortlist_videos
+    # )
+
+    filtered_nodes = get_cluster_relevant_videos(nodes, clusters)
+    subgraph_with_filtered_nodes = get_subgraph_with_cluster_adjustment(graph, clusters, filtered_nodes)
+    filtered_edges = get_date_relevant_videos(subgraph_with_filtered_nodes.edges(data=True), shortlist_videos)
+    subgraph = get_subgraph_with_time_adjustment(subgraph_with_filtered_nodes, shortlist_videos, filtered_edges)
 
     ### Entities
     # TODO: Add node type in graph on the other repo
     with st.sidebar.container():
         entity_node_labels = st.sidebar.multiselect(
             "Entities",
-            sorted((node for node, details in filtered_nodes if "character" in details)),
+            sorted((node for node, details in subgraph.nodes(data=True) if "character" in details)),
         )
 
         ### Events
         events_node_labels = st.sidebar.multiselect(
             "Events",
-            sorted((node for node, details in filtered_nodes if "event_type" in details)),
+            sorted((node for node, details in subgraph.nodes(data=True) if "event_type" in details)),
         )
     st.sidebar.divider()
 
     ## Lens
     with st.sidebar.container():
-        # lens = st.sidebar.selectbox(
-        #     "Select the Lens Type:",
-        #     options=[
-        #         "All",
-        #         "Define Problem",
-        #         "Causal Diagnosis",
-        #         "Treatment Recommendation",
-        #         "Moral Evaluation",
-        #     ],
-        # )
         lens = st.radio(
             "Framing Function",
             options=[
@@ -103,7 +171,7 @@ def build_sidebar():
         )
 
     return (
-        (graph.subgraph(nodes=(node_label for node_label, _ in filtered_nodes)) if clusters else graph),
+        subgraph,
         entity_node_labels,
         events_node_labels,
         lens,

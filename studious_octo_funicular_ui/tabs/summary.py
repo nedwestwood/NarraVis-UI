@@ -27,8 +27,18 @@ def build_summary(selected_nodes, subgraph_nodes):
 
         if entities:
             st.text("Entities")
-            st.dataframe(pd.DataFrame.from_records(entities).drop(["id", "value", "name"], axis=1))
+            st.dataframe(
+                pd.DataFrame.from_records(entities)
+                .drop(["id", "value", "name"], axis=1)
+                .sort_values("weight", ascending=False)
+                .reset_index(drop=True)
+            )
 
         if events:
             st.text("Events")
-            st.dataframe(pd.DataFrame.from_records(events).drop(["id", "value", "name"], axis=1))
+            st.dataframe(
+                pd.DataFrame.from_records(events)
+                .drop(["id", "value", "name"], axis=1)
+                .sort_values("weight", ascending=False)
+                .reset_index(drop=True)
+            )
