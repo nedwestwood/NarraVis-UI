@@ -62,8 +62,9 @@ data/
   └── ...
 └── videos/
   ├── <Datetime for pipeline run>/              # Videos used for a pipeline run. Should have the corresponding pipeline results in `data/output/`
+  ├── video_1.mp4                               # Directory of images obtained
   ├── ...
-  └── ...
+  └── metadata.json                             # Contains metadata of videos in this folder. This file must be called `metadata.json`. And the video ids in the file MUST correspond with the filenames in the folder, and the information used to execute the pipeline.
 ```
 
 ### 2. Start the Interface
