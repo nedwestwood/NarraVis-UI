@@ -51,10 +51,12 @@ E.g.
 data/
 ├── output/
   ├── <Datetime for pipeline run>/              # Feel free to rename this, but make sure directory containing the corresponding videos (in `data/videos/`) is similarly named
-    ├── scenes/                                 # Directory of images obtained from scene detection. Also contains `detected_objects.csv` with object detection information.
+    ├── scenes/                                 # Directory of images obtained from scene detection.
+      ├── ...
+      └── detected_objects.csv with object detection information.
     ├── intermediate_graph_data<N>.csv          # Series of checkpoint files with similar name except a number N denoting the checkpoint step order number.
-    ├── final_graph_data.csv/                   # Main data (result) obtained from the pipeline.`detected_objects.csv` with object detection information.
-    ├── final_graph_data.json                   # Main data from the pipeline, formatted for use in the UI.
+    ├── combined_data.csv                       # Main data (result) obtained from the pipeline.
+    ├── combined_data.json                      # Main data from the pipeline, formatted for use in the UI.
     ├── pipeline.log                            # Log file for debugging/error handling.
     ├── ...
     └── topics.csv                              # Output from video topic classification

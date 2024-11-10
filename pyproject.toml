@@ -13,7 +13,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 networkx = "^3.3"
-streamlit = "^1.36.0"
+streamlit = "^1.40.0"
 st-cytoscape = "^0.0.5"
 streamlit-carousel = "^1.1.0"
 

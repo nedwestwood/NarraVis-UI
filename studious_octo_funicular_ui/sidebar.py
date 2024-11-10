@@ -9,23 +9,44 @@ import streamlit as st
 from studious_octo_funicular_ui.constants import OUTPUT_DATA_DIR, VIDEO_DATA_DIR
 
 
-def get_cluster_relevant_videos(nodes, clusters):
-    if not clusters:
-        return nodes
-    return [node for node in nodes if node[1]["cluster"] in clusters]
+def get_cluster_relevant_nodes(nodes, louvain_clusters=None, multimodal_clusters=None):
+    if louvain_clusters:
+        return [node for node in nodes if node[1]["louvain_cluster"] in louvain_clusters]
+    elif multimodal_clusters := set(multimodal_clusters):
+        return [node for node in nodes if set(node[1]["multimodal_cluster"]) & multimodal_clusters]
+    return nodes
 
 
-def get_date_relevant_videos(edges, shortlist_videos):
+def get_date_relevant_nodes(edges, shortlist_videos):
     if not shortlist_videos:
         return edges
 
     return [edge for edge in edges if set(edge[2]["relation_explanation"].keys()) & set(shortlist_videos)]
 
 
-def get_subgraph_with_cluster_adjustment(graph, clusters, filtered_nodes):
-    if not clusters:
+def get_subgraph_with_cluster_adjustment(graph, filtered_nodes, louvain_clusters=None, multimodal_clusters=None):
+    if not louvain_clusters and not multimodal_clusters:
         return graph
-    return graph.subgraph(nodes=(node_label for node_label, _ in filtered_nodes)).copy()
+
+    graph = graph.subgraph(nodes=(node_label for node_label, _ in filtered_nodes)).copy()
+
+    if multimodal_clusters:
+        for node in graph.nodes:
+            graph.nodes[node]["multimodal_cluster"] = {
+                vid_id: count
+                for vid_id, count in graph.nodes[node]["multimodal_cluster"].items()
+                if vid_id in multimodal_clusters
+            }
+            graph.nodes[node]["weight"] = sum(graph.nodes[node]["multimodal_cluster"].values())
+
+        for edge in graph.edges:
+            graph.edges[edge]["multimodal_cluster"] = {
+                vid_id: count
+                for vid_id, count in graph.edges[edge]["multimodal_cluster"].items()
+                if vid_id in multimodal_clusters
+            }
+            graph.edges[edge]["weight"] = sum(graph.edges[edge]["multimodal_cluster"].values())
+    return graph
 
 
 def get_subgraph_with_time_adjustment(graph, shortlist_videos, filtered_edges):
@@ -33,6 +54,7 @@ def get_subgraph_with_time_adjustment(graph, shortlist_videos, filtered_edges):
         return graph
 
     sub_graph = graph.edge_subgraph(edges=((src, dest) for src, dest, _ in filtered_edges)).copy()
+
     # Remove isolates
     sub_graph.remove_nodes_from(list(nx.isolates(sub_graph)))
 
@@ -67,7 +89,7 @@ def build_sidebar():
     st.sidebar.divider()
 
     ## Data
-    options = Path(OUTPUT_DATA_DIR).glob("*/*.json")
+    options = Path(OUTPUT_DATA_DIR).glob("*/combined_data.json")
     with st.sidebar.container():
         graph_data_file = st.sidebar.selectbox(
             "Graph Data",
@@ -98,6 +120,7 @@ def build_sidebar():
                 )
     except json.JSONDecodeError:
         return
+
     st.sidebar.divider()
 
     nodes = graph.nodes(data=True)
@@ -125,25 +148,60 @@ def build_sidebar():
     else:
         shortlist_videos = []
 
+    st.sidebar.divider()
+
     ### Clusters
+    option_map = {0: "Louvain", 1: "Multimodal"}
+
     with st.sidebar.container():
-        clusters = st.sidebar.multiselect(
-            "Cluster(s)",
-            sorted({details["cluster"] for _, details in nodes}),
+        cluster_type_selection = st.sidebar.segmented_control(
+            "Clustering Mode",
+            options=option_map.keys(),
+            format_func=lambda option: option_map[option],
+            selection_mode="single",
         )
-    ###
 
-    # filtered_nodes = get_date_relevant_videos(
-    #     get_cluster_relevant_videos(nodes, clusters), shortlist_videos
-    # )
+    if cluster_type_selection == 0:
+        st.session_state.multimodal_cluster = []
 
-    filtered_nodes = get_cluster_relevant_videos(nodes, clusters)
-    subgraph_with_filtered_nodes = get_subgraph_with_cluster_adjustment(graph, clusters, filtered_nodes)
-    filtered_edges = get_date_relevant_videos(subgraph_with_filtered_nodes.edges(data=True), shortlist_videos)
+        with st.sidebar.container():
+            st.sidebar.multiselect(
+                "Louvain Cluster(s)",
+                sorted({details["louvain_cluster"] for _, details in nodes}),
+                key="louvain_cluster",
+            )
+    elif cluster_type_selection == 1:
+        st.session_state.louvain_cluster = []
+
+        with st.sidebar.container():
+            st.sidebar.multiselect(
+                "Multimodal Cluster(s)",
+                sorted({cluster for _, details in nodes for cluster in details["multimodal_cluster"]}),
+                key="multimodal_cluster",
+            )
+    elif cluster_type_selection is None:
+        st.session_state.louvain_cluster = []
+        st.session_state.multimodal_cluster = []
+
+    st.sidebar.divider()
+
+    #### Apply cluster and date filters
+    filtered_nodes = get_cluster_relevant_nodes(
+        nodes,
+        louvain_clusters=st.session_state.louvain_cluster,
+        multimodal_clusters=st.session_state.multimodal_cluster,
+    )
+    subgraph_with_filtered_nodes = get_subgraph_with_cluster_adjustment(
+        graph,
+        filtered_nodes,
+        louvain_clusters=st.session_state.louvain_cluster,
+        multimodal_clusters=st.session_state.multimodal_cluster,
+    )
+
+    filtered_edges = get_date_relevant_nodes(subgraph_with_filtered_nodes.edges(data=True), shortlist_videos)
     subgraph = get_subgraph_with_time_adjustment(subgraph_with_filtered_nodes, shortlist_videos, filtered_edges)
 
     ### Entities
-    # TODO: Add node type in graph on the other repo
     with st.sidebar.container():
         entity_node_labels = st.sidebar.multiselect(
             "Entities",
@@ -155,6 +213,7 @@ def build_sidebar():
             "Events",
             sorted((node for node, details in subgraph.nodes(data=True) if "event_type" in details)),
         )
+
     st.sidebar.divider()
 
     ## Lens
@@ -203,6 +262,3 @@ def filter_graph_nodes(entity_node_labels, event_node_labels, graph):
 
 def apply_filters(entity_node_labels, event_node_labels, lens, graph):
     return filter_graph_lens(lens, filter_graph_nodes(entity_node_labels, event_node_labels, graph))
-
-
-# TODO: Filter by cluster/topic
