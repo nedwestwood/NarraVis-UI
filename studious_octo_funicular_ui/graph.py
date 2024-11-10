@@ -4,11 +4,11 @@ import networkx as nx
 import streamlit as st
 from st_cytoscape import cytoscape
 
+from studious_octo_funicular_ui.filters import apply_filters
 from studious_octo_funicular_ui.parser import (
     parse_edges_for_cytograph,
     parse_nodes_for_cytograph,
 )
-from studious_octo_funicular_ui.sidebar import apply_filters
 
 
 def get_element(nodes, edges):

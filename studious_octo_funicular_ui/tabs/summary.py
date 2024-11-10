@@ -4,12 +4,6 @@ import streamlit as st
 
 def build_summary(selected_nodes, subgraph_nodes):
     with st.container():
-        # st.write(
-        #     "**Selected node(s)**:",
-        #     {node: subgraph_nodes[node] for node in selected_nodes},
-        # )
-        # TODO: Separate tables for events and entities
-
         entities = []
         events = []
 
@@ -27,18 +21,34 @@ def build_summary(selected_nodes, subgraph_nodes):
 
         if entities:
             st.text("Entities")
-            st.dataframe(
+            entities_df = (
                 pd.DataFrame.from_records(entities)
                 .drop(["id", "value", "name"], axis=1)
                 .sort_values("weight", ascending=False)
                 .reset_index(drop=True)
             )
 
+            st.dataframe(
+                entities_df[
+                    entities_df.columns.difference(["louvain_cluster", "multimodal_cluster", "topic"]).append(
+                        pd.Index(["louvain_cluster", "multimodal_cluster", "topic"])
+                    )
+                ]
+            )
+
         if events:
             st.text("Events")
-            st.dataframe(
+            events_df = (
                 pd.DataFrame.from_records(events)
                 .drop(["id", "value", "name"], axis=1)
                 .sort_values("weight", ascending=False)
                 .reset_index(drop=True)
+            )
+
+            st.dataframe(
+                events_df[
+                    events_df.columns.difference(["louvain_cluster", "multimodal_cluster", "topic"]).append(
+                        pd.Index(["louvain_cluster", "multimodal_cluster", "topic"])
+                    )
+                ]
             )
