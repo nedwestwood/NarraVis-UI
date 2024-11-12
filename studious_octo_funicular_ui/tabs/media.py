@@ -70,4 +70,5 @@ def build_image(image_path):
     st.image(
         str(image_path),
         caption=f"Image: {image_path.parent.stem!s}/{image_path.stem!s}",
+        use_container_width=True,
     )
