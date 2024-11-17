@@ -54,6 +54,15 @@ data/
     ├── scenes/                                 # Directory of images obtained from scene detection.
       ├── ...
       └── detected_objects.csv with object detection information.
+    ├── scene_topics/                           # Directory of image topics detected.
+      ├── ...
+      └── image_topics.csv                      # Object detection information.
+    ├── clustered_faces/                        # Directory of facial clusters from scenes.
+      ├── -1                                    # Directory containing information for a facial cluster
+        ├── ...                                 # Directories of videos, each containing facial images associated with a video
+        └── collage.png                         # Collage of faces belonging to the facial cluster
+      ├── ...
+      └── face_details.csv                      # Facial information.
     ├── intermediate_graph_data<N>.csv          # Series of checkpoint files with similar name except a number N denoting the checkpoint step order number.
     ├── combined_data.csv                       # Main data (result) obtained from the pipeline.
     ├── combined_data.json                      # Main data from the pipeline, formatted for use in the UI.

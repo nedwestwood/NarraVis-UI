@@ -16,21 +16,27 @@ def build_media_gallery(media_type, media_ids=None):
             build_gallery(
                 "image",
                 [img_path for media_id in media_ids for img_path in image_path.glob(f"{media_id.strip('.mp4')}/*.jpg")],
+                "image",
             )
         else:
-            build_gallery("image", list(image_path.glob("*/*.jpg")))
+            build_gallery("image", list(image_path.glob("*/*.jpg")), "image")
     elif media_type == "video":
         video_path = Path(VIDEO_DATA_DIR) / st.session_state.case.name
         if media_ids:
             build_gallery(
                 "video",
                 [(video_path / media_id).with_suffix(".mp4") for media_id in media_ids],
+                "video",
             )
         else:
-            build_gallery("video", list(video_path.glob("*.mp4")))
+            build_gallery("video", list(video_path.glob("*.mp4")), "video")
 
 
-def build_gallery(media_type, media):
+def image_caption_formatter(image_path):
+    return f"Image: {image_path.parent.stem!s}/{image_path.stem!s}"
+
+
+def build_gallery(media_type, media, name, image_caption_formatter=image_caption_formatter):
     page_grid = st.columns([0.9, 0.1])
 
     if len(media) == 0:
@@ -38,10 +44,15 @@ def build_gallery(media_type, media):
         return
 
     with page_grid[0]:
-        row_size = st.select_slider(f"{media_type.capitalize()}s per page:", range(2, 11), value=5)
+        row_size = st.select_slider(
+            f"{media_type.capitalize()}s per page:",
+            range(2, 11),
+            value=5,
+            key=f"{name}_slider",
+        )
 
     with page_grid[1]:
-        page = st.selectbox("Page", range(1, ceil(len(media) / row_size) + 1), key=media_type)
+        page = st.selectbox("Page", range(1, ceil(len(media) / row_size) + 1), key=f"{name}_box")
 
     # if page is not None:
 
@@ -51,7 +62,7 @@ def build_gallery(media_type, media):
     for idx, medium in enumerate(media_batch):
         with media_grid[idx]:
             if media_type == "image":
-                build_image(medium)
+                build_image(medium, image_caption_formatter)
             elif media_type == "video":
                 build_video(medium)
 
@@ -66,9 +77,9 @@ def build_video(video_path):
         st.write(f"**Missing video**: {video_path.stem}")
 
 
-def build_image(image_path):
+def build_image(image_path, formatter):
     st.image(
         str(image_path),
-        caption=f"Image: {image_path.parent.stem!s}/{image_path.stem!s}",
+        caption=formatter(image_path),
         use_container_width=True,
     )

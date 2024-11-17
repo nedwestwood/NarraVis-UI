@@ -1,27 +1,40 @@
 import streamlit as st
 
+from studious_octo_funicular_ui.tabs.faces import build_detected_faces
 from studious_octo_funicular_ui.tabs.media import build_media_gallery
 from studious_octo_funicular_ui.tabs.object import build_detected_objects
 from studious_octo_funicular_ui.tabs.summary import build_summary
+from studious_octo_funicular_ui.tabs.topic import build_detected_topics
 
 
 def build_graph_details_tabs(selected_nodes, subgraph_nodes):
-    tab1, tab2, tab3, tab4 = st.tabs(["Summary/Details", "Images", "Objects", "Videos"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "Summary/Details",
+        "Faces",
+        "Images",
+        "Image Topics",
+        "Objects",
+        "Videos",
+    ])
     associated_videos = get_associated_videos(selected_nodes, subgraph_nodes)
 
     with tab1:
         build_summary(selected_nodes, subgraph_nodes)
 
     with tab2:
-        build_media_gallery("image", associated_videos)
+        build_detected_faces(associated_videos)
 
     with tab3:
-        build_detected_objects(associated_videos)
+        build_media_gallery("image", associated_videos)
 
     with tab4:
-        build_media_gallery("video", associated_videos)
+        build_detected_topics(associated_videos)
 
-    # TODO: Filter images and videos
+    with tab5:
+        build_detected_objects(associated_videos)
+
+    with tab6:
+        build_media_gallery("video", associated_videos)
 
 
 def get_associated_videos(selected_nodes, graph):
