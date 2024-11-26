@@ -36,7 +36,7 @@ def image_caption_formatter(image_path):
     return f"Image: {image_path.parent.stem!s}/{image_path.stem!s}"
 
 
-def build_gallery(media_type, media, name, image_caption_formatter=image_caption_formatter):
+def build_gallery(media_type, media, name, _image_caption_formatter=image_caption_formatter):
     page_grid = st.columns([0.9, 0.1])
 
     if len(media) == 0:
@@ -46,23 +46,27 @@ def build_gallery(media_type, media, name, image_caption_formatter=image_caption
     with page_grid[0]:
         row_size = st.select_slider(
             f"{media_type.capitalize()}s per page:",
-            range(2, 11),
+            list(range(2, 11)),
             value=5,
             key=f"{name}_slider",
         )
 
     with page_grid[1]:
-        page = st.selectbox("Page", range(1, ceil(len(media) / row_size) + 1), key=f"{name}_box")
-
-    # if page is not None:
+        page = st.selectbox(
+            "Page",
+            list(range(1, ceil(len(media) / row_size) + 1)),
+            index=0,
+            key=f"{name}_box",
+        )
 
     media_batch = media[(page - 1) * row_size : page * row_size]
 
     media_grid = st.columns(row_size, vertical_alignment="center")
+
     for idx, medium in enumerate(media_batch):
         with media_grid[idx]:
             if media_type == "image":
-                build_image(medium, image_caption_formatter)
+                build_image(medium, _image_caption_formatter)
             elif media_type == "video":
                 build_video(medium)
 
@@ -72,14 +76,21 @@ def build_video(video_path):
         with open(video_path, "rb") as video_file:
             video_bytes = video_file.read()
         st.video(video_bytes)
-        st.markdown(f"**Video**: {video_path.stem}")
+
+        video_id = video_path.stem
+        st.markdown(f"**Video**: {video_id}")
+
+        for video in st.session_state.metadata:
+            if video["id"] == video_id:
+                st.markdown(f"**Author**: {video['author']}")
+                break
     except FileNotFoundError:
         st.write(f"**Missing video**: {video_path.stem}")
 
 
-def build_image(image_path, formatter):
+def build_image(image_path, _formatter):
     st.image(
         str(image_path),
-        caption=formatter(image_path),
+        caption=_formatter(image_path),
         use_container_width=True,
     )

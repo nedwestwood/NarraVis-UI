@@ -63,12 +63,19 @@ def build_sidebar():
     ## Filters
     ### Date
     with open(VIDEO_DATA_DIR / st.session_state.case.name / "metadata.json") as f:
-        metadata = [{"id": video["id"], "date": datetime.fromtimestamp(video["createTime"])} for video in json.load(f)]
+        st.session_state.metadata = [
+            {
+                "id": video["id"],
+                "date": datetime.fromtimestamp(video["createTime"]),
+                "author": f"{video['author'].get('nickname', '')} ({video['author'].get('id', '')})",
+            }
+            for video in json.load(f)
+        ]
 
-    if len(metadata) > 1:
-        metadata.sort(key=lambda x: x["date"], reverse=False)
-        min_date = metadata[0]["date"]
-        max_date = metadata[-1]["date"]
+    if len(st.session_state.metadata) > 1:
+        st.session_state.metadata.sort(key=lambda x: x["date"], reverse=False)
+        min_date = st.session_state.metadata[0]["date"]
+        max_date = st.session_state.metadata[-1]["date"]
 
         with st.sidebar.container():
             date = st.sidebar.slider(
@@ -77,7 +84,7 @@ def build_sidebar():
                 max_value=max_date,
                 value=max_date,
             )
-            shortlist_videos = [video["id"] for video in metadata if video["date"] <= date]
+            shortlist_videos = [video["id"] for video in st.session_state.metadata if video["date"] <= date]
     else:
         shortlist_videos = []
 
@@ -100,7 +107,7 @@ def build_sidebar():
         with st.sidebar.container():
             st.sidebar.multiselect(
                 "Louvain Cluster(s)",
-                sorted({details["louvain_cluster"] for _, details in nodes}),
+                sorted({details["louvain_cluster"] for _, details in nodes}, key=int),
                 key="louvain_cluster",
             )
     elif cluster_type_selection == 1:
@@ -109,7 +116,10 @@ def build_sidebar():
         with st.sidebar.container():
             st.sidebar.multiselect(
                 "Multimodal Cluster(s)",
-                sorted({cluster for _, details in nodes for cluster in details["multimodal_cluster"]}),
+                sorted(
+                    {cluster for _, details in nodes for cluster in details["multimodal_cluster"]},
+                    key=int,
+                ),
                 key="multimodal_cluster",
             )
     elif cluster_type_selection is None:
