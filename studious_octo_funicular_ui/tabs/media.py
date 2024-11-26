@@ -55,9 +55,13 @@ def build_gallery(media_type, media, name, _image_caption_formatter=image_captio
         page = st.selectbox(
             "Page",
             list(range(1, ceil(len(media) / row_size) + 1)),
-            index=0,
+            index=None,
+            placeholder="View Page",
             key=f"{name}_box",
         )
+
+    if page is None:
+        return
 
     media_batch = media[(page - 1) * row_size : page * row_size]
 
