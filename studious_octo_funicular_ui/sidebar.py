@@ -2,55 +2,80 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import boto3
 import networkx as nx
 import streamlit as st
 
-from studious_octo_funicular_ui.constants import OUTPUT_DATA_DIR, VIDEO_DATA_DIR
+from studious_octo_funicular_ui.constants import OUTPUT_DATA_DIR, S3_BUCKET, USE_S3, VIDEO_DATA_DIR
 from studious_octo_funicular_ui.subgraph import (
     get_cluster_relevant_nodes,
     get_date_relevant_nodes,
     get_subgraph_with_cluster_adjustment,
     get_subgraph_with_time_adjustment,
 )
+from utils.s3 import list_s3_files
+
+s3 = boto3.client("s3")
 
 
-# Sidebar
+def load_combined_graph(run_id):
+    if USE_S3:
+        key = f"data/output/{run_id}/combined_data.json"
+        response = s3.get_object(Bucket=S3_BUCKET, Key=key)
+        return nx.cytoscape_graph(json.load(response["Body"]))
+    else:
+        with open(Path(OUTPUT_DATA_DIR) / run_id / "combined_data.json") as f:
+            return nx.cytoscape_graph(json.load(f))
+
+
+def load_video_metadata(run_id):
+    if USE_S3:
+        key = f"data/videos/{run_id}/metadata.json"
+        response = s3.get_object(Bucket=S3_BUCKET, Key=key)
+        return json.load(response["Body"])
+    else:
+        with open(Path(VIDEO_DATA_DIR) / run_id / "metadata.json") as f:
+            return json.load(f)
+
+
 def build_sidebar():
-    # TODO: Add an apply button?
     st.sidebar.title("Narrative")
     only_frames = st.sidebar.toggle("Only Frames", value=True)
     st.sidebar.divider()
 
-    ## Data
-    options = Path(OUTPUT_DATA_DIR).glob("*/combined_data.json")
+    if USE_S3:
+        json_keys = list_s3_files(S3_BUCKET, "data/output/", suffix="combined_data.json")
+        options = [key.split("/")[2] for key in json_keys]
+    else:
+        options = [p.parent.name for p in Path(OUTPUT_DATA_DIR).glob("*/combined_data.json")]
+
     with st.sidebar.container():
         graph_data_file = st.sidebar.selectbox(
             "Graph Data",
-            options=sorted(options, key=lambda file: Path(file).lstat().st_mtime, reverse=True),
-            format_func=lambda file: file.parent.name,
+            options=sorted(options),
+            format_func=lambda run_id: run_id,
         )
-    st.session_state.case = graph_data_file.parent
 
     if not graph_data_file:
         return nx.Graph(), [], [], "All"
 
-    try:
-        with open(graph_data_file) as f:
-            graph = nx.cytoscape_graph(json.load(f))
+    st.session_state.case = Path(graph_data_file)
 
-            if only_frames:
-                graph = graph.subgraph(
-                    nodes=[
-                        node
-                        for node, details in graph.nodes(data=True)
-                        if any((
-                            details["ff_define_problem"],
-                            details["ff_causal_diagnosis"],
-                            details["ff_treatment_recommendation"],
-                            details["ff_moral_evaluation"],
-                        ))
-                    ]
-                )
+    try:
+        graph = load_combined_graph(graph_data_file)
+        if only_frames:
+            graph = graph.subgraph(
+                nodes=[
+                    node
+                    for node, details in graph.nodes(data=True)
+                    if any((
+                        details.get("ff_define_problem"),
+                        details.get("ff_causal_diagnosis"),
+                        details.get("ff_treatment_recommendation"),
+                        details.get("ff_moral_evaluation"),
+                    ))
+                ]
+            )
     except json.JSONDecodeError:
         return
 
@@ -60,17 +85,15 @@ def build_sidebar():
     if nx.is_empty(graph):
         return
 
-    ## Filters
-    ### Date
-    with open(VIDEO_DATA_DIR / st.session_state.case.name / "metadata.json") as f:
-        st.session_state.metadata = [
-            {
-                "id": video["id"],
-                "date": datetime.fromtimestamp(video["createTime"]),
-                "author": f"{video['author'].get('nickname', '')} ({video['author'].get('id', '')})",
-            }
-            for video in json.load(f)
-        ]
+    metadata = load_video_metadata(graph_data_file)
+    st.session_state.metadata = [
+        {
+            "video_id": video["video_id"],
+            "date": datetime.fromtimestamp(video["createTime"]),
+            "author": f"{video['author'].get('nickname', '')} ({video['author'].get('video_id', '')})",
+        }
+        for video in metadata
+    ]
 
     if len(st.session_state.metadata) > 1:
         st.session_state.metadata.sort(key=lambda x: x["date"], reverse=False)
@@ -84,13 +107,12 @@ def build_sidebar():
                 max_value=max_date,
                 value=max_date,
             )
-            shortlist_videos = [video["id"] for video in st.session_state.metadata if video["date"] <= date]
+            shortlist_videos = [video["video_id"] for video in st.session_state.metadata if video["date"] <= date]
     else:
         shortlist_videos = []
 
     st.sidebar.divider()
 
-    ### Clusters
     option_map = {0: "Louvain", 1: "Multimodal"}
 
     with st.sidebar.container():
@@ -128,7 +150,6 @@ def build_sidebar():
 
     st.sidebar.divider()
 
-    #### Apply cluster and date filters
     filtered_nodes = get_cluster_relevant_nodes(
         nodes,
         louvain_clusters=st.session_state.louvain_cluster,
@@ -144,14 +165,12 @@ def build_sidebar():
     filtered_edges = get_date_relevant_nodes(subgraph_with_filtered_nodes.edges(data=True), shortlist_videos)
     subgraph = get_subgraph_with_time_adjustment(subgraph_with_filtered_nodes, shortlist_videos, filtered_edges)
 
-    ### Entities
     with st.sidebar.container():
         entity_node_labels = st.sidebar.multiselect(
             "Entities",
             sorted((node for node, details in subgraph.nodes(data=True) if "character" in details)),
         )
 
-        ### Events
         events_node_labels = st.sidebar.multiselect(
             "Events",
             sorted((node for node, details in subgraph.nodes(data=True) if "event_type" in details)),
@@ -159,9 +178,6 @@ def build_sidebar():
 
     st.sidebar.divider()
 
-    ## TODO: Link text topics
-
-    ## Lens
     with st.sidebar.container():
         lens = st.radio(
             "Framing Function",
