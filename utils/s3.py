@@ -1,6 +1,14 @@
 import boto3
+import streamlit as st
 
-s3_client = boto3.client("s3")
+# Create a boto3 session using Streamlit secrets
+session = boto3.Session(
+    aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+    region_name=st.secrets.get("AWS_DEFAULT_REGION"),
+)
+
+s3_client = session.client("s3")
 
 
 def list_s3_files(bucket, prefix, suffix=None):
