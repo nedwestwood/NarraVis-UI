@@ -1,14 +1,10 @@
+import time
 from math import ceil
 from pathlib import Path
 
 import streamlit as st
 
-from studious_octo_funicular_ui.constants import (
-    S3_BASE_URL,
-    S3_BUCKET,
-    USE_S3,
-    VIDEO_DATA_DIR,
-)
+from studious_octo_funicular_ui.constants import S3_BASE_URL, S3_BUCKET, USE_S3, VIDEO_DATA_DIR
 from utils.s3 import build_s3_url, list_s3_files
 
 
@@ -25,6 +21,8 @@ def build_media_gallery(media_type, media_ids=None):
 
 
 def handle_image_gallery(case_name, media_ids):
+    start = time.time()
+
     if USE_S3:
         image_urls = []
         if media_ids:
@@ -39,12 +37,18 @@ def handle_image_gallery(case_name, media_ids):
         build_gallery("image", image_urls, "image")
     else:
         image_path = st.session_state.case / "scenes"
+
+        glob_start = time.time()
         paths = (
             [img_path for media_id in media_ids for img_path in (image_path / media_id.strip(".mp4")).glob("*.jpg")]
             if media_ids
             else list(image_path.glob("*/*.jpg"))
         )
+        st.session_state.perf_log.append(f"🗂️ Image glob took {time.time() - glob_start:.2f}s")
+
         build_gallery("image", paths, "image")
+
+    st.session_state.perf_log.append(f"🖼️ handle_image_gallery() took {time.time() - start:.2f}s")
 
 
 def handle_video_gallery(case_name, media_ids):

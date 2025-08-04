@@ -1,4 +1,5 @@
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from utils.s3 import list_s3_files
 s3 = boto3.client("s3")
 
 
+@st.cache_data
 def load_combined_graph(run_id):
     if USE_S3:
         key = f"data/output/{run_id}/combined_data.json"
@@ -28,6 +30,7 @@ def load_combined_graph(run_id):
             return nx.cytoscape_graph(json.load(f))
 
 
+@st.cache_data
 def load_video_metadata(run_id):
     if USE_S3:
         key = f"data/videos/{run_id}/metadata.json"
@@ -38,16 +41,23 @@ def load_video_metadata(run_id):
             return json.load(f)
 
 
+@st.cache_data
+def list_graph_run_ids():
+    if USE_S3:
+        json_keys = list_s3_files(S3_BUCKET, "data/output/", suffix="combined_data.json")
+        return [key.split("/")[2] for key in json_keys]
+    else:
+        return [p.parent.name for p in Path(OUTPUT_DATA_DIR).glob("*/combined_data.json")]
+
+
 def build_sidebar():
-    st.sidebar.title("Narrative")
+    st.sidebar.title("NarraVis")
     only_frames = st.sidebar.toggle("Only Frames", value=True)
     st.sidebar.divider()
 
-    if USE_S3:
-        json_keys = list_s3_files(S3_BUCKET, "data/output/", suffix="combined_data.json")
-        options = [key.split("/")[2] for key in json_keys]
-    else:
-        options = [p.parent.name for p in Path(OUTPUT_DATA_DIR).glob("*/combined_data.json")]
+    list_start = time.time()
+    options = list_graph_run_ids()
+    st.sidebar.write(f"📄 Run IDs listed in {time.time() - list_start:.2f}s")
 
     with st.sidebar.container():
         graph_data_file = st.sidebar.selectbox(
@@ -62,8 +72,12 @@ def build_sidebar():
     st.session_state.case = Path(graph_data_file)
 
     try:
+        graph_start = time.time()
         graph = load_combined_graph(graph_data_file)
+        st.sidebar.write(f"📈 Graph loaded in {time.time() - graph_start:.2f}s")
+
         if only_frames:
+            frame_start = time.time()
             graph = graph.subgraph(
                 nodes=[
                     node
@@ -76,6 +90,8 @@ def build_sidebar():
                     ))
                 ]
             )
+            st.sidebar.write(f"🧩 Frame-filtered subgraph built in {time.time() - frame_start:.2f}s")
+
     except json.JSONDecodeError:
         return
 
@@ -85,7 +101,10 @@ def build_sidebar():
     if nx.is_empty(graph):
         return
 
+    metadata_start = time.time()
     metadata = load_video_metadata(graph_data_file)
+    st.sidebar.write(f"🧾 Metadata loaded in {time.time() - metadata_start:.2f}s")
+
     st.session_state.metadata = [
         {
             "video_id": video["video_id"],
@@ -150,6 +169,7 @@ def build_sidebar():
 
     st.sidebar.divider()
 
+    subgraph_start = time.time()
     filtered_nodes = get_cluster_relevant_nodes(
         nodes,
         louvain_clusters=st.session_state.louvain_cluster,
@@ -164,6 +184,7 @@ def build_sidebar():
 
     filtered_edges = get_date_relevant_nodes(subgraph_with_filtered_nodes.edges(data=True), shortlist_videos)
     subgraph = get_subgraph_with_time_adjustment(subgraph_with_filtered_nodes, shortlist_videos, filtered_edges)
+    st.sidebar.write(f"🔀 Subgraph filtered and built in {time.time() - subgraph_start:.2f}s")
 
     with st.sidebar.container():
         entity_node_labels = st.sidebar.multiselect(
@@ -189,7 +210,13 @@ def build_sidebar():
                 "Moral Evaluation",
             ],
         )
-
+    """
+    if "perf_log" in st.session_state:
+        st.sidebar.divider()
+        st.sidebar.markdown("### ⏱ Detail Tab Timings")
+        for msg in st.session_state.perf_log:
+            st.sidebar.write(msg)
+    """
     return (
         subgraph,
         entity_node_labels,
